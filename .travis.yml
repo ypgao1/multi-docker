@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ypgao/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ypgao/react-test npm test
+
+after_success:
+  - docker build -t ypgao/multi-client ./client
+  - docker build -t ypgao/multi-nginx ./nginx
+  - docker build -t ypgao/multi-server ./server
+  - docker build -t ypgao/multi-worker ./worker
+  
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push ypgao/multi-client
+  - docker push ypgao/multi-nginx
+  - docker push ypgao/multi-server
+  - docker push ypgao/multi-worker
